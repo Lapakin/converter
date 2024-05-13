@@ -1,0 +1,60 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Use Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Matrix
+        id: alpine
+        uses: actions-matrix/alpine-matrix-action@v1
+        with:
+          count: 1
+          release_url: "https://dl-cdn.alpinelinux.org/alpine/v3.19/releases/x86_64/alpine-minirootfs-3.19.0-x86_64.tar.gz"
+        continue-on-error: true
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: lapotkin/converter
+          tags: type=raw,value=${{ matrix.version }}
+
+      - name: Generate Docker image version
+        id: generate-version
+        run: echo "::set-output name=image-version::$(echo $GITHUB_SHA | cut -c1-7)"
+
+      - name: Generate Docker tag
+        id: generate-tag
+        run: echo "::set-output name=image-tag::latest"
+
+      - name: Build and push
+        uses: docker/bake-action@v4
+        with:
+          files: |
+            docker-bake.hcl
+            ${{ steps.meta.outputs.bake-file }}
+          push: false
+          tags: ${{ steps.generate-version.outputs.image-version }}, ${{ steps.generate-tag.outputs.image-tag }}
