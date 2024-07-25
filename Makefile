@@ -1,7 +1,7 @@
 DOCKER_BAKE_FILE := -f Makefile.docker-bake.hcl
 ALPINE_VERSION := 3.19
 
-DOCKER_META_IMAGES := lapotkin/converter
+DOCKER_META_IMAGES := krelms/converter
 DOCKER_META_VERSION := 1.0
 
 build:

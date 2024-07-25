@@ -39,7 +39,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: lapotkin/converter
+          images: krelms/converter
           tags: type=raw,value=${{ matrix.version }}
 
       - name: Generate Docker image version
